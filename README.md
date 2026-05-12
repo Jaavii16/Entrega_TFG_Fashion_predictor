@@ -1,0 +1,1 @@
+# Entrega_TFG_Fashion_predictor
