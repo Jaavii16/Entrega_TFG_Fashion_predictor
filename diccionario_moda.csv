@@ -1,0 +1,98 @@
+term_en,term_es,category
+dress,vestido,prenda
+coat,abrigo,prenda
+jacket,chaqueta,prenda
+skirt,falda,prenda
+pants,pantalones,prenda
+shirt,camisa,prenda
+blouse,blusa,prenda
+sweater,jersey,prenda
+cardigan,cárdigan,prenda
+trench coat,gabardina,prenda
+bomber jacket,chaqueta bomber,prenda
+jeans,vaqueros,prenda
+maxi dress,vestido largo,prenda
+mini skirt,minifalda,prenda
+hoodie,sudadera,prenda
+t-shirt,camiseta,prenda
+cargo pants,pantalones cargo,prenda
+blazer,blazer,prenda
+corset,corsé,prenda
+bodysuit,body,prenda
+bermuda shorts,bermudas,prenda
+crop top,crop top,prenda
+slip dress,vestido lencero,prenda
+red,rojo,color
+blue,azul,color
+green,verde,color
+yellow,amarillo,color
+pink,rosa,color
+brown,marrón,color
+black,negro,color
+white,blanco,color
+beige,beige,color
+gray,gris,color
+turquoise,turquesa,color
+navy,azul marino,color
+burgundy,burdeos,color
+khaki,caqui,color
+olive,verde oliva,color
+camel,camel,color
+silver,plateado,color
+cherry red,rojo cereza,color
+cobalt blue,azul cobalto,color
+periwinkle,bígaro,color
+magenta,magenta,color
+lavender,lavanda,color
+mint,menta,color
+leather,cuero,material
+denim,vaquero,material
+lace,encaje,material
+silk,seda,material
+cotton,algodón,material
+wool,lana,material
+velvet,terciopelo,material
+linen,lino,material
+corduroy,pana,material
+satin,satén,material
+suede,ante,material
+chiffon,gasa,material
+faux leather,polipiel,material
+mesh,rejilla,material
+sequins,lentejuelas,material
+mohair,mohair,material
+floral,floral,patron
+striped,rayas,patron
+plaid,cuadros,patron
+polka dot,lunares,patron
+animal print,animal print,patron
+camouflage,camuflaje,patron
+leopard print,leopardo,patron
+tie dye,tie dye,patron
+sneakers,zapatillas,calzado
+boots,botas,calzado
+heels,tacones,calzado
+sandals,sandalias,calzado
+loafers,mocasines,calzado
+casual,casual,estilo
+vintage,vintage,estilo
+minimalist,minimalista,estilo
+avant-garde,vanguardista,estilo
+bohemian,bohemio,estilo
+streetwear,urbano,estilo
+preppy,pijo,estilo
+quiet luxury,lujo silencioso,estilo
+coquette,coquette,estilo
+gorpcore,gorpcore,estilo
+y2k,y2k,estilo
+grunge,grunge,estilo
+athleisure,deportivo,estilo
+sleeve,manga,parte_prenda
+collar,cuello,parte_prenda
+waistband,cinturilla,parte_prenda
+hem,dobladillo,parte_prenda
+cuff,puño,parte_prenda
+pocket,bolsillo,parte_prenda
+lapel,solapa,parte_prenda
+handbag,bolso,accesorio
+sunglasses,gafas de sol,accesorio
