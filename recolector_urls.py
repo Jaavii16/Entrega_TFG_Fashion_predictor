@@ -58,7 +58,7 @@ def es_url_valida(url):
     if url_lower.endswith(('.pdf', '.jpg', '.png', '.jpeg', '.gif')):
         return False
 
-    # 3. NUEVO: FILTRO ANTI-ÍNDICES (Categorías principales)
+    # 3. FILTRO ANTI-ÍNDICES (Categorías principales)
     # Si la URL termina exactamente en una sección común, es un índice, no un artículo.
     secciones_raiz = [
         "/moda/", "/moda", "/fashion/", "/fashion", 

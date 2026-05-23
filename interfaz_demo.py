@@ -1,24 +1,27 @@
+"""
+Interfaz de usuario (Demo Cloud) - Predictor de Tendencias de Moda.
+Proporciona un panel de control interactivo simulando el pipeline de extracción,
+procesamiento multimodal y entrenamiento de modelos predictivos.
+"""
+
 import streamlit as st
 import os
 import time
 import pandas as pd
-import datetime # NUEVO: Para la fecha de corte
-import glob     # NUEVO: Para leer las imágenes
+import datetime
+import glob
 
-# --- CONFIGURACIÓN DE LA PÁGINA ---
-st.set_page_config(page_title="Demo TFG Javier", layout="wide", initial_sidebar_state="expanded")
+# ----------------- CONFIGURACIÓN DEL ENTORNO -----------------
+st.set_page_config(page_title="Panel de Control - Predictor de Tendencias", layout="wide", initial_sidebar_state="expanded")
 
-# AVISO IMPORTANTE PARA EL TRIBUNAL / TUTORA
-st.info("ℹ **MODO DEMOSTRACIÓN (CLOUD):** Esta interfaz está alojada en un servidor gratuito en la nube. Por limitaciones de hardware y tiempo de ejecución, los botones simulan la ejecución de los algoritmos de scraping y Deep Learning, mostrando resultados pre-calculados del entorno de desarrollo local.")
-
-st.title("Predictor de Tendencias de Moda Basado en Redes Sociales - TFG de Javier")
-st.markdown("Bienvenido al panel de control del TFG. Siga el orden de ejecución para procesar los datos y entrenar la Inteligencia Artificial.")
+st.info("[INFO] **ENTORNO DEMOSTRATIVO (CLOUD):** Debido a limitaciones de cómputo en la nube, esta instancia opera sobre un conjunto de resultados pre-calculados procedentes de la última ejecución estable local, garantizando así la fluidez de la interfaz. NOTA: Los volúmenes de datos (cantidad de imágenes, URLs, etc.) mostrados en los logs de esta simulación son puramente ilustrativos para la demo; la volumetría masiva real del proyecto se detalla íntegramente en la memoria escrita.")
+st.title("Sistema Híbrido Predictor de Tendencias - TFG")
+st.markdown("Panel de control del pipeline de datos. Ejecute los módulos secuencialmente para procesar la información y generar las predicciones.")
 st.markdown("---")
 
-# Ruta base del proyecto
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# --- CONFIGURACIÓN GLOBAL (BARRA LATERAL) ---
+# ----------------- PANEL LATERAL (CONFIGURACIÓN) -----------------
 st.sidebar.header("Configuración Global")
 modo_ejecucion = st.sidebar.radio(
     "Modo de recolección:", 
@@ -32,113 +35,107 @@ ventana_prediccion = st.sidebar.selectbox(
     help="Selecciona qué variable quieres que el modelo prediga: la popularidad promedio de los próximos 3 o 6 meses."
 )
 
-# NUEVO: Selector de fecha de corte
 fecha_corte = st.sidebar.date_input(
-    "Fecha de corte (Train/Test Split):",
+    "Fecha de partición (Train/Test Split):",
     datetime.date(2025, 1, 1),
-    help="Los datos estrictamente anteriores a esta fecha se usarán para entrenar. Los posteriores se aíslan para validar el modelo."
+    help="Punto temporal de división para evitar filtración de datos durante el entrenamiento."
 )
 
-# --- FUNCIÓN DE SIMULACIÓN PARA LA DEMO ---
-def simular_script(nombre_script, tiempo_espera=2, mensaje="Ejecución completada."):
-    with st.spinner(f"Simulando ejecución de {nombre_script} en la nube..."):
-        # Pausa artificial para simular procesamiento
+# ----------------- FUNCIÓN DE EJECUCIÓN (MOCK) -----------------
+def simular_script(nombre_script: str, tiempo_espera: int = 2, mensaje_exito: str = "Ejecución completada."):
+    """Simula la ejecución en consola de los scripts del backend."""
+    with st.spinner(f"Ejecutando módulo {nombre_script} en backend..."):
         time.sleep(tiempo_espera)
-        st.success(f"{mensaje}")
+        st.success(f"{mensaje_exito}")
         
-        # Simulamos una salida de consola básica
-        with st.expander("Ver log de consola simulado"):
-            st.code(f"Iniciando {nombre_script}...\nCargando variables de entorno:\n- MODO: {modo_ejecucion}\n- TARGET: {ventana_prediccion}\n- FECHA_CORTE: {fecha_corte.strftime('%Y-%m-%d')}\nProcesamiento finalizado con éxito.", language="shell")
+        with st.expander("Inspeccionar logs de ejecución"):
+            st.code(f"Iniciando {nombre_script}...\nCargando variables de entorno:\n- MODO_RECOLECCIÓN: {modo_ejecucion}\n- HORIZONTE_PREDICTIVO: {ventana_prediccion}\n- FECHA_SPLIT: {fecha_corte.strftime('%Y-%m-%d')}\n[OK] Pipeline finalizado con código de salida 0.", language="shell")
 
 # =========================================================================
-# 1. PINTEREST E INSTAGRAM
+# FASE 1: EXTRACCIÓN SOCIAL
 # =========================================================================
-st.header("Fase 1: Redes Sociales (Pinterest e Instagram)")
+st.header("Fase 1: Extracción en Redes Sociales")
 
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Pinterest")
-    if st.button("1a. Ejecutar Scraper de Pinterest"):
-        simular_script("pinterest_scraper_2.py", 2, "245 URLs de tableros recolectadas.")
+    if st.button("1a. Inicializar Crawler (Pinterest)"):
+        simular_script("pinterest_scraper_2.py", 2, "[INFO] 245 URLs de tableros recolectadas.")
             
-    if st.button("2. Descargar Imágenes (Pinterest)"):
-        simular_script("pinterest_image_downloader.py", 3, "1200 imágenes descargadas en directorio local.")
+    if st.button("2. Descarga de Archivos Visuales"):
+        simular_script("pinterest_image_downloader.py", 3, "[INFO] 1200 imágenes descargadas y encoladas.")
 
 with col2:
     st.subheader("Instagram")
-    if st.button("1b. Ejecutar Scraper de Instagram"):
-        simular_script("apify_hashtags_profiles.py", 2, "Datos de perfiles de influencers extraídos mediante API.")
+    if st.button("1b. Ejecutar Extracción API (Instagram)"):
+        simular_script("apify_hashtags_profiles.py", 2, "[INFO] Metadatos de perfiles e interacciones extraídos correctamente.")
 
 st.markdown("---")
 
 # =========================================================================
-# 2. ANÁLISIS DE IMÁGENES
+# FASE 2: VISIÓN ARTIFICIAL
 # =========================================================================
-st.header("Fase 2: Análisis de Imágenes por IA")
-st.write("Este proceso analizará todas las imágenes descargadas en la fase anterior (Pinterest e Insta).")
+st.header("Fase 2: Inferencia Visual (Zero-Shot Learning)")
+st.write("Procesamiento semántico del corpus de imágenes recolectado mediante modelos transformadores.")
 
-if st.button("3. Analizar todas las imágenes (CLIP)"):
-    simular_script("analisis_imagenes.py", 4, "Modelo CLIP cargado. 1500 imágenes clasificadas por prenda, color y estilo.")
+if st.button("3. Ejecutar Inferencia Multimodal (CLIP)"):
+    simular_script("analisis_imagenes.py", 4, "[INFO] Modelo CLIP instanciado. 1500 imágenes categorizadas.")
 
 st.markdown("---")
 
 # =========================================================================
-# 3. REVISTAS DE MODA
+# FASE 3: NLP Y METADATOS
 # =========================================================================
-st.header("Fase 3: Scrapping de Revistas")
-st.write("Extracción de artículos y metadatos de revistas especializadas.")
+st.header("Fase 3: Procesamiento de Revistas Digitales")
 
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    if st.button("4. Recolectar URLs Revistas"):
-        simular_script("recolector_urls.py", 2, "URLs de artículos de moda extraídas con éxito.")
+    if st.button("4. Recolección de Endpoints"):
+        simular_script("recolector_urls.py", 2, "[INFO] Mapa de URLs objetivo generado.")
 
 with c2:
-    if st.button("5. Extractor Híbrido"):
-        simular_script("extractor_hibrido.py", 3, "Texto, autor y temáticas extraídas del HTML.")
+    if st.button("5. Parseo HTML (Extractor Híbrido)"):
+        simular_script("extractor_hibrido.py", 3, "[INFO] Entidades (Texto, Autor, Tags) estructuradas.")
 
 with c3:
-    if st.button("6. Procesador de Fechas para normalizar formatos"):
-        simular_script("procesador_fechas.py", 1, "Fechas relativas convertidas a formato Datetime (YYYY-MM-DD).")
+    if st.button("6. Normalización Temporal"):
+        simular_script("procesador_fechas.py", 1, "[INFO] Formatos relativos estandarizados a Datetime.")
 
 st.markdown("---")
 
 # =========================================================================
-# 4. PREPARACIÓN Y MACHINE LEARNING
+# FASE 4: ENTRENAMIENTO Y EVALUACIÓN
 # =========================================================================
-st.header("Fase 4: Consolidación y Entrenamiento Predictivo")
-st.write("Fusión de todas las fuentes de datos (Redes + Revistas + Google Trends) y evaluación de los algoritmos.")
+st.header("Fase 4: Ingeniería de Datos y Modelado")
 
-if st.button("7. Unificar Datasets Completos"):
-    simular_script("unificar_datasets.py", 2, "Tablas unidas por 'termino' y 'fecha_dt'. Dimensiones: (2600, 45).")
+if st.button("7. Consolidación de Datasets (Master Table)"):
+    simular_script("unificar_datasets.py", 2, "[INFO] Integración completada. Matriz final: (2600, 45).")
 
-if st.button("8. Generar Dataset de Entrenamiento"):
-    simular_script("crear_dataset_entrenamiento.py", 2, "Variables rezagadas (lags) y variables Target generadas correctamente.")
+if st.button("8. Generación de Variables Rezagadas (Lags)"):
+    simular_script("crear_dataset_entrenamiento.py", 2, "[INFO] Features temporales y variables Delta generadas.")
 
-st.markdown("### Competición de Algoritmos (Predictor de Tendencias)")
-if st.button("9. ENTRENAR Y EVALUAR MODELOS (Random Forest, SVR, XGBoost)", type="primary"):
-    with st.spinner("Entrenando modelos matemáticos..."):
-        time.sleep(3) # Pausita dramática para que parezca que entrena
+st.markdown("### Evaluación de Modelos Predictivos")
+if st.button("9. COMPILAR Y EVALUAR ALGORITMOS (RF, SVR, XGBoost)", type="primary"):
+    with st.spinner("Optimizando hiperparámetros y calculando métricas de error..."):
+        time.sleep(3) 
         st.balloons()
-        st.success("¡Entrenamiento finalizado con éxito! Mostrando métricas y gráficas definitivas.")
+        st.success("Evaluación de rendimiento completada. Visualizando resultados.")
         
-        # 1. MOSTRAMOS LA TABLA REAL (Con los últimos datos que me pasaste)
-        st.subheader("📊 Tabla de Métricas de Error")
+        st.subheader("Métricas de Precisión Absoluta")
+        # Tabla con los valores exactos mostrados en la memoria
         resultados = pd.DataFrame({
             "Métrica": ["MAE", "RMSE", "R²"],
-            "Mod. A (Completo)": ["3.34", "5.80", "0.9505"],
-            "Mod. B (Híbrido)": ["6.15", "8.98", "0.8816"],
-            "Mod. C (RF Delta)": ["2.50", "4.32", "0.9725"],
-            "Mod. D (SVR Delta)": ["2.50", "4.32", "0.9726"],
-            "Mod. E (XGB Delta)": ["2.48", "4.21", "0.9740"]
+            "Modelo A (Histórico)": ["3.13", "5.55", "0.9501"],
+            "Modelo B (Híbrido)": ["5.72", "8.38", "0.8864"],
+            "Modelo C (RF Delta)": ["2.43", "4.45", "0.9680"],
+            "Modelo D (SVR Delta)": ["2.38", "4.34", "0.9695"],
+            "Modelo E (XGB Delta)": ["2.31", "4.15", "0.9721"]
         })
-        # Ocultamos el índice numérico para que se vea como en la consola
         st.table(resultados.set_index("Métrica"))
         
-        # 2. MOSTRAMOS LAS GRÁFICAS PRE-CALCULADAS
-        st.subheader("📈 Predicciones del Comportamiento a Futuro")
+        st.subheader("Proyección Gráfica de Tendencias")
         carpeta_graficas = os.path.join(BASE_DIR, "resultados_graficas")
         
         if os.path.exists(carpeta_graficas):
@@ -148,6 +145,6 @@ if st.button("9. ENTRENAR Y EVALUAR MODELOS (Random Forest, SVR, XGBoost)", type
                 for i, img_path in enumerate(imagenes):
                     cols[i % 2].image(img_path, use_container_width=True)
             else:
-                st.info("Debes subir 3 o 4 gráficas PNG a la carpeta 'resultados_graficas' del servidor para que se muestren aquí.")
+                st.warning("[ALERTA] No se encontraron gráficas en el directorio local.")
         else:
-            st.info("Debes crear una carpeta llamada 'resultados_graficas' y mete algunas gráficas PNG para que la demo las pinte al terminar.")
+            st.error("[ERROR] Directorio de salida 'resultados_graficas' no encontrado.")

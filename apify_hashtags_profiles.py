@@ -12,7 +12,6 @@ APIFY_API_TOKEN = "" # Token personal eliminado por motivos de seguridad
 
 # DIARIO: Busca lo último (poco consumo)
 # HISTORICO: Busca tendencias pasadas (consume más)
-#MODO_EJECUCION = "DIARIO" 
 # Para la aplicacion, se puede configurar con variable de entorno para no tener que tocar el código
 MODO_EJECUCION = os.environ.get("MODO_EJECUCION", "DIARIO")
 
@@ -230,7 +229,7 @@ def guardar_csv_incremental(datos, archivo):
         writer.writerows(datos)
 
 def scrapear_apify(client, objetivo, urls_ya_guardadas):
-    print(f"\n--- Procesando: {objetivo} ---")
+    print(f"\nProcesando: {objetivo}")
     resultados = []
     dataset_id = None
     
@@ -239,14 +238,14 @@ def scrapear_apify(client, objetivo, urls_ya_guardadas):
     TIEMPO_MAXIMO_POR_PERFIL = 200
     
     try:
-        # Selección de Actor según el objetivo (perfil o hashtag)
+        # Selección de actor según el objetivo (perfil o hashtag)
         if objetivo.startswith("#"):
             tag_name = objetivo.replace("#", "")
             actor_id = "apify/instagram-hashtag-scraper"
             run_input = {
                 "hashtags": [tag_name], 
                 "resultsLimit": LIMIT_PER_HASHTAG,
-                # Evitamos bucles infinitos en hashtags
+                # Evitamos bucles infinitos en hashtags porque a veces son muy grandes y pueden tardar mucho
                 "maxRequestRetries": 2, 
             }
         else:
@@ -258,8 +257,8 @@ def scrapear_apify(client, objetivo, urls_ya_guardadas):
                 "resultsType": "posts",
                 "proxy": {"useApifyProxy": True},
                 # -----------------LIMITES PARA NO QUEDARNOS MUCHO TIEMPO BLOQUEADOS  -----------------
-                "maxRequestRetries": 3,       # Si falla 2 veces, cortamos
-                "pageTimeout": 60,            # Si una página tarda 60s, fuera
+                "maxRequestRetries": 3, # Si falla 2 veces, cortamos
+                "pageTimeout": 60, # Si una página tarda 60s, fuera
                 "handlePageTimeoutSecs": 2000, # Tiempo max total de navegación
             }
 
@@ -333,7 +332,7 @@ def scrapear_apify(client, objetivo, urls_ya_guardadas):
                 # Detección de imágenes
                 lista_imagenes = []
 
-                # Caso A: Carrusel
+                # Caso A: Carrusel/multifoto
                 if item.get("type") == "Sidecar" or item.get("childPosts") or item.get("images"):
                     children = item.get("childPosts") or item.get("images") or []
                     for idx, child in enumerate(children):
@@ -348,7 +347,7 @@ def scrapear_apify(client, objetivo, urls_ya_guardadas):
                     if img_url:
                         lista_imagenes.append((img_url, ""))
 
-                # Descarga y Guardado
+                # Descarga y guardado
                 for (url_img_web, sufijo) in lista_imagenes:
                     nombre_archivo = f"{user_clean}_{shortcode}{sufijo}.jpg"
                     

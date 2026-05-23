@@ -157,7 +157,6 @@ if st.button("9. ENTRENAR Y EVALUAR MODELOS (Random Forest, SVR, XGBoost)", type
         if os.path.exists(carpeta_graficas):
             imagenes = glob.glob(os.path.join(carpeta_graficas, "*.png"))
             if imagenes:
-                # Mostramos las imágenes en un grid de 2 columnas
                 cols = st.columns(2)
                 for i, img_path in enumerate(imagenes):
                     cols[i % 2].image(img_path, use_container_width=True)

@@ -33,7 +33,7 @@ def preparar_dataset_ventana():
     df_x['periodo'] = pd.to_datetime(df_x['mes']).dt.to_period('M')
     df_y['periodo'] = pd.to_datetime(df_y['mes']).dt.to_period('M')
 
-    # 1. MERGE (Unimos Inputs y Datos Reales actuales)
+    # 1. MERGE (Unimos inputs y datos reales actuales)
     print("Cruzando datos...")
     # Inner join para tener solo filas donde tengamos datos de ambos datasets (inputs y targets)
     df_full = pd.merge(df_x, df_y, on=['periodo', 'termino'], how='inner')

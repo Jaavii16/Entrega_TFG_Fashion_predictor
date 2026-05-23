@@ -15,7 +15,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # ----------------- CONFIGURACIÓN AVANZADA DE BÚSQUEDA -----------------
 
-#MODO_EJECUCION = "HISTORICO" 
 # Para la aplicacion
 MODO_EJECUCION = os.environ.get("MODO_EJECUCION", "DIARIO")
 
@@ -90,8 +89,6 @@ def obtener_anio_de_target(target):
     return None
 
 def generar_fecha_inteligente(anio_target, texto_target):
-    # ... (Exactamente la misma función que en el script de Instagram) ...
-    # Copiar y pegar la implementación completa aquí para que funcione.
     texto_target = str(texto_target).lower()
     mes_inicio, mes_fin = 1, 12
     if any(x in texto_target for x in ['ss', 'spring', 'summer']):
@@ -147,7 +144,7 @@ def extraer_detalles_pin(driver, url):
     """Entra al pin y busca el JSON oculto con la fecha"""
     try:
         driver.get(url)
-        time.sleep(random.uniform(2, 4)) # Pausa humana
+        time.sleep(random.uniform(2, 4)) # Pausa humana simulada
         
         # 1. Buscamos script JSON-LD (Donde Pinterest guarda los datos para Google)
         scripts = driver.find_elements(By.CSS_SELECTOR, 'script[type="application/ld+json"]')
@@ -220,11 +217,11 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 datos_totales = []
 
 try:
-    for i, q in enumerate(queries): # 'i' es el índice de la query
+    for i, q in enumerate(queries): # i es el índice de la query
         urls = obtener_urls_de_feed(driver, q, NUM_PINS_A_ANALIZAR)
         
         print(f"   Analizando {len(urls)} pines al detalle...")
-        for j, url_pin in enumerate(urls): # 'j' es el índice del pin dentro de esa query
+        for j, url_pin in enumerate(urls): # j es el índice del pin dentro de esa query
             datos = extraer_detalles_pin(driver, url_pin)
             if datos:
                 # --- LÓGICA DE FECHA ---

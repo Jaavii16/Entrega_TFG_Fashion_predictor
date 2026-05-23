@@ -43,7 +43,7 @@ def generar_fecha_inteligente(anio_target, texto_target):
         
     # 2. Detectar Fashion Weeks (Suelen ser Feb y Sept)
     elif any(x in texto_target for x in ['fw', 'fashionweek', 'pfw', 'nyfw', 'mfw', 'cphfw', 'lfw']):
-        # Elegimos al azar entre la edición de Febrero o Septiembre
+        # Elegimos al azar entre la edición de Febrero o Septiembre porque no podemos saber cuál es exactamente
         mes_inicio = random.choice([2, 9])
         mes_fin = mes_inicio # Solo ese mes, para ser más precisos
         

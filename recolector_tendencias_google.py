@@ -4,19 +4,16 @@ import os
 import time
 import random
 
-# ----------------- CONFIGURACIÓN -----------------
-START_DATE = "2026-01-01" 
-END_DATE = "2026-03-31"
+# ----------------- CONFIGURACIÓN DEL ENTORNO Y EXTRACCIÓN -----------------
+# Variables globales para escalabilidad: Solo se necesita modificar estas fechas
+# para recolectar nuevos horizontes temporales en el futuro.
+PERIOD_START = "2026-01-01" 
+PERIOD_END = "2026-05-31"
 
-TIMEFRAMES = [
-    # ("2020-01-01", "2021-12-31"),
-    # ("2022-01-01", "2023-12-31"),
-    # ("2024-01-01", "2025-12-31"),
-    ("2026-01-01", "2026-03-31")
-]
+TIMEFRAMES = [(PERIOD_START, PERIOD_END)]
 
 TERMINOS_POR_DIA = 12
-ANCHOR_TERM = "jeans"  # TÉRMINO ANCLA
+ANCHOR_TERM = "jeans"
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 DICCIONARIO_FILE = os.path.join(base_dir, "diccionario_moda.csv")
@@ -24,46 +21,44 @@ OUTPUT_FILE = os.path.join(base_dir, "google_trends_moda.csv")
 
 # ----------------- FUNCIONES AUXILIARES -----------------
 
-def guardar_incremental(df_nuevo, ruta_archivo):
+def guardar_incremental(df_nuevo: pd.DataFrame, ruta_archivo: str):
     """
-    Guarda los datos nuevos en el CSV. Si ya existe, los añade sin duplicar.
+    Persiste los datos extraídos en el archivo de salida de forma incremental,
+    asegurando la eliminación de duplicados por término y fecha.
     """
     if df_nuevo is None or df_nuevo.empty:
         return
 
     if os.path.exists(ruta_archivo):
         try:
-            # Leemos lo que ya había
             df_exist = pd.read_csv(ruta_archivo)
-            # Concatenamos
             df_final = pd.concat([df_exist, df_nuevo])
-            # Eliminamos duplicados (Mismo término, mismo mes)
             df_final = df_final.drop_duplicates(subset=['termino', 'mes'])
         except Exception as e:
-            print(f"   [ERROR CRÍTICO AL LEER CSV] {e}")
-            # Si falla la lectura, guardamos en un archivo de rescate para no perder nada
+            print(f"   [CRITICAL ERROR] Fallo de lectura/escritura: {e}")
             ruta_rescate = ruta_archivo.replace(".csv", "_RESCATE.csv")
             df_nuevo.to_csv(ruta_rescate, index=False, mode='a', header=not os.path.exists(ruta_rescate))
-            print(f"   [SALVADO] Datos guardados en {ruta_rescate}")
+            print(f"   [RECUPERACIÓN] Datos volcados en archivo de seguridad: {ruta_rescate}")
             return
     else:
         df_final = df_nuevo
         
-    # Guardamos
     df_final.to_csv(ruta_archivo, index=False)
-    print(f"[DISCO] Datos guardados correctamente.")
+    print(f"[INFO] Completado. Datos guardados en disco.")
 
-def obtener_datos_normalizados(pytrends, lista_objetivo, anchor):
-    # La lista de petición es el Ancla + los 4 términos que vamos a consultar
+def obtener_datos_normalizados(pytrends: TrendReq, lista_objetivo: list, anchor: str) -> pd.DataFrame:
+    """
+    Realiza la petición a la API de Google Trends normalizando los resultados
+    respecto a un término ancla para mantener la coherencia transversal de las métricas.
+    """
     lista_peticion = [anchor] + lista_objetivo
     resultados = []
 
     max_intentos = 2
-    intentos = 0
-    ESPERA_429 = 180  # segundos (3 minutos)
+    ESPERA_429 = 180  
 
     for inicio, fin in TIMEFRAMES:
-        print(f"      ↳ Timeframe {inicio} → {fin}")
+        print(f"Extrayendo ventana temporal: {inicio} → {fin}")
 
         intento = 0
         while intento <= max_intentos:
@@ -79,7 +74,7 @@ def obtener_datos_normalizados(pytrends, lista_objetivo, anchor):
                 df = pytrends.interest_over_time()
 
                 if df is None or df.empty:
-                    print("        [INFO] Sin datos en este tramo")
+                    print("        [WARNING] No se reportan datos para esta ventana.")
                     break
 
                 if 'isPartial' in df.columns:
@@ -98,20 +93,20 @@ def obtener_datos_normalizados(pytrends, lista_objetivo, anchor):
                 df_final['mes'] = df_final['mes'].dt.strftime('%Y-%m')
 
                 resultados.append(df_final)
-                break  # éxito → salimos del while
+                break  
 
             except Exception as e:
                 if "429" in str(e):
                     if intento < max_intentos:
-                        print(f"        [429] Bloqueo. Esperando {ESPERA_429//60} min y reintentando...")
+                        print(f"        [RATE LIMIT 429] Bloqueo detectado. Suspendiendo ejecución {ESPERA_429//60} min...")
                         time.sleep(ESPERA_429)
                         intento += 1
                         pytrends = TrendReq(hl='es-ES', tz=360, timeout=30)
                     else:
-                        print("        [429] Segundo fallo. Abortando bloque.")
+                        print("        [ERROR] Máximo número de reintentos alcanzado por Rate Limiting.")
                         return None
                 else:
-                    print(f"        [ERROR] {e}")
+                    print(f"        [ERROR] Excepción no controlada: {e}")
                     return None
 
     if not resultados:
@@ -122,93 +117,84 @@ def obtener_datos_normalizados(pytrends, lista_objetivo, anchor):
     
     return df_total
 
-# ----------------- PROCESO PRINCIPAL -----------------
+# ----------------- FLUJO DE EJECUCIÓN PRINCIPAL -----------------
 
 def main():
-    print("--- INICIANDO RECOLECTOR DE TRENDS ---")
+    print("--- INICIANDO PIPELINE DE GOOGLE TRENDS ---")
     
-    print("DEBUG: Iniciando Pytrends con timeout extendido (15, 30)...")
     pytrends = TrendReq(hl='es-ES', tz=360, timeout=30)
-    # 1. Cargar Diccionario
+    
     if not os.path.exists(DICCIONARIO_FILE):
-        print(f"ERROR: No encuentro {DICCIONARIO_FILE}")
+        print(f"[ERROR] Dependencia ausente: {DICCIONARIO_FILE}")
         return
 
     df_dic = pd.read_csv(DICCIONARIO_FILE)
 
-    # Preparar términos
     terminos = pd.melt(df_dic, id_vars=['category'], value_vars=['term_en', 'term_es'], 
                        var_name='idioma', value_name='termino')
     terminos = terminos.dropna(subset=['termino']).drop_duplicates(subset=['termino'])
     terminos['termino'] = terminos['termino'].str.strip().str.lower()
 
-    # Excluimos el ancla de objetivos
     terminos = terminos[terminos['termino'] != ANCHOR_TERM]
 
-    # 2. Cargar estado actual para ver qué falta
+    # Dinamización del horizonte temporal: Extraemos "YYYY-MM" directamente de PERIOD_START
+    start_month_str = PERIOD_START[:7]
+
     if os.path.exists(OUTPUT_FILE):
         df_exist = pd.read_csv(OUTPUT_FILE)
         if not df_exist.empty:
             df_exist['termino'] = df_exist['termino'].astype(str).str.strip().str.lower()
             
-            # ¡NUEVO!: Filtramos para ver qué términos tienen ya datos de 2026
-            # La columna 'mes' tiene formato 'YYYY-MM', así que buscamos los mayores a '2026-01'
-            df_nuevo_periodo = df_exist[df_exist['mes'] >= '2026-01']
-            
-            # Ahora los "procesados" son solo los que ya tienen datos en 2026
+            # Filtro dinámico basado en la configuración global
+            df_nuevo_periodo = df_exist[df_exist['mes'] >= start_month_str]
             terminos_procesados = set(df_nuevo_periodo['termino'].unique())
         else:
             terminos_procesados = set()
     else:
         terminos_procesados = set()
 
-    # Lista de pendientes
     pendientes = [t for t in terminos['termino'].tolist() if t not in terminos_procesados]
 
-    print(f"Total términos en diccionario: {len(terminos)}")
-    print(f"Ya procesados: {len(terminos_procesados)}")
-    print(f"Pendientes: {len(pendientes)}")
+    print(f"[INFO] Terminos en diccionario: {len(terminos)}")
+    print(f"[INFO] Terminos procesadas ({start_month_str} en adelante): {len(terminos_procesados)}")
+    print(f"[INFO] Terminos en cola: {len(pendientes)}")
 
     if not pendientes:
-        print("Dataset completo! No hay nada pendiente")
+        print("[INFO] Dataset actualizado. No se requieren nuevas peticiones.")
         return
 
-    # Lote de hoy
-    lote_hoy = pendientes[:TERMINOS_POR_DIA]
+    lote_ejecucion = pendientes[:TERMINOS_POR_DIA]
     
-    # Bloques de 4
-    bloques = [lote_hoy[i:i+4] for i in range(0, len(lote_hoy), 4)]
-    print(f"Procesando {len(bloques)} bloques ({len(lote_hoy)} términos) hoy...\n")
+    # Segmentación en bloques de 4 términos (+1 ancla = 5 términos máximos por petición)
+    bloques = [lote_ejecucion[i:i+4] for i in range(0, len(lote_ejecucion), 4)]
+    print(f"[INFO] Configuración de lote: {len(bloques)} bloques ({len(lote_ejecucion)} entidades).\n")
 
-    # ----------------- BUCLE PRINCIPAL DE RECOLECCIÓN -----------------
     try:
         for i, bloque in enumerate(bloques):
-            print(f"[{i+1}/{len(bloques)}] Consultando: {bloque} + [Ancla: {ANCHOR_TERM}]")
+            print(f"[{i+1}/{len(bloques)}] Evaluando clúster: {bloque} | Ancla: '{ANCHOR_TERM}'")
             
             df_bloque = obtener_datos_normalizados(pytrends, bloque, ANCHOR_TERM)
             
             if df_bloque is not None and not df_bloque.empty:
-                # Añadir metadatos (categoría)
                 df_bloque['termino'] = df_bloque['termino'].str.strip().str.lower()
                 df_bloque = df_bloque.merge(terminos[['termino', 'category']], on='termino', how='left')
                 
-                # ----------------- GUARDADO INCREMENTAL DE SEGURIDAD -----------------
                 guardar_incremental(df_bloque, OUTPUT_FILE)
             else:
-                print("   [FAIL] No se obtuvieron datos de este bloque.")
+                print("   [ALERTA] Omisión de bloque por falta de datos o error de red.")
 
-            # Pausa aleatoria para evitar bloqueos
-            if i < len(bloques) - 1: # No esperar en el último
+            # Rutina de evasión de bloqueos
+            if i < len(bloques) - 1: 
                 t = random.randint(45, 80)
-                print(f"   Enfriando {t}s...")
+                print(f"   [PAUSA] Suspendiendo hilo {t}s para mitigar Rate Limiting...")
                 time.sleep(t)
 
     except KeyboardInterrupt:
-        print("\n\n[INTERRUPCIÓN USUARIO] Detectado Ctrl+C.")
-        print("   Los datos anteriores ya se han guardado en el CSV.")
-        print("   Cerrando el script de forma segura...")
+        print("\n\n[INFO] Señal de interrupción (SIGINT) recibida.")
+        print("   Finalizando volcado en disco de transacciones pendientes...")
+        print("   Terminación segura completada.")
 
-    print(f"\n--- Fin de la ejecución. Archivo: {OUTPUT_FILE} ---")
+    print(f"\n--- Ejecución finalizada. Archivo resultante: {OUTPUT_FILE} ---")
 
 if __name__ == "__main__":
     main()

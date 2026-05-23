@@ -42,8 +42,8 @@ def graficar_termino(df_completo, term):
 
     plt.axvline(x=pd.to_datetime(FECHA_CORTE), color='black', linestyle='--', label='Corte Predicción')
     plt.title(f"Análisis de Tendencia: {term.upper()}", fontsize=14, fontweight='bold')
-    plt.ylabel('Índice de Interés (0-100)', fontsize=10) # Añadido eje Y
-    plt.xlabel('Fecha', fontsize=10) # Añadido eje X
+    plt.ylabel('Índice de Interés (0-100)', fontsize=10) 
+    plt.xlabel('Fecha', fontsize=10)
     plt.grid(True, alpha=0.3)
     plt.legend()
     plt.tight_layout()
@@ -76,10 +76,10 @@ def mostrar_mejores_predicciones(df_test, n=5):
 # ---------------- LÓGICA ----------------
 
 def entrenar_modelo():
-    print(f"--- ENTRENANDO MODELOS COMPARATIVOS ({TARGET_COL}) ---")
+    print(f"--- ENTRENANDO MODELOS ({TARGET_COL}) ---")
     
     if not os.path.exists(FILE_DATASET):
-        print("ERROR: No encuentro el dataset de entrenamiento.")
+        print("ERROR: No se encuentra el dataset de entrenamiento.")
         return
 
     df = pd.read_csv(FILE_DATASET)
@@ -107,7 +107,7 @@ def entrenar_modelo():
     y_train = train[TARGET_COL]
     y_test = test[TARGET_COL]
 
-    # 2.5 ESCALADO DE DATOS
+    # ESCALADO DE DATOS
     print("Escalando datos ...")
     scaler = StandardScaler()
     
@@ -187,7 +187,7 @@ def entrenar_modelo():
     print("-" * 115)
 
     
-    # 5. LÓGICA DE CONSENSO (INNER JOIN)
+    # 5. INNER JOIN
     test['Pred_C_delta'] = pred_C_delta
     test['Pred_D_delta'] = pred_D_delta
     test['Pred_E_delta'] = pred_E_delta
@@ -215,7 +215,7 @@ def entrenar_modelo():
         print(f"No hay términos que coincidan simultáneamente en el Top {N} de los tres modelos.")
 
     
-    # Guardamos TODAS las predicciones en el dataframe de test para graficarlas
+    # Guardamos todas las predicciones en el dataframe de test para graficarlas
     test['Pred_A'] = pred_A
     test['Pred_B'] = pred_B
     test['Pred_C'] = pred_C_absoluta
@@ -253,7 +253,6 @@ def entrenar_modelo():
             
             plt.axvline(x=fecha_split, color='black', linestyle='--')
             
-            # Títulos y Ejes
             plt.title(f"Predicción: {term.upper()} ({nombre_modelo})", fontsize=14, fontweight='bold')
             plt.ylabel('Índice de Interés (0-100)', fontsize=10)
             plt.xlabel('Fecha', fontsize=10)

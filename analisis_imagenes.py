@@ -65,7 +65,7 @@ def analizar_dataset(csv_path):
     modificados = 0
     
 
-    # Usar un umbral de 0.02 (2%) es suficiente para quitar ruido puro, pero dejar pasar prendas
+    # Usar un umbral de 0.02 (2%) es suficiente para quitar ruido puro, pero dejar pasar algunas prendas
     UMBRAL_MINIMO = 0.02 
     
     for i, row in df.iterrows():

@@ -15,7 +15,7 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 input_file = os.path.join(base_dir, "dataset_revistas", "revistas_dataset_urls.csv")
 output_file = os.path.join(base_dir, "dataset_revistas", "dataset_final_contenido.csv")
 
-# Tus selectores originales
+# Selectores manuales por revista
 SELECTORES = {
     "Vogue":    ["div.body__inner-container", "div[data-testid='BodyWrapper']", "div.article__body", "div.c-article-body"],
     "Elle":     ["div.article-body", "div.standard-body", "section.body-text"],
@@ -156,7 +156,7 @@ def main():
     options.add_argument("--blink-settings=imagesEnabled=false")
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-    # Modo Append
+    # Modo append importante para no borrar lo que ya teníamos
     f_out = open(output_file, "a", newline="", encoding="utf-8")
     
     writer = csv.DictWriter(f_out, fieldnames=["Fuente", "URL", "Fecha", "Contenido"])
