@@ -14,9 +14,9 @@ import glob
 # ----------------- CONFIGURACIÓN DEL ENTORNO -----------------
 st.set_page_config(page_title="Panel de Control - Predictor de Tendencias", layout="wide", initial_sidebar_state="expanded")
 
-st.info("[INFO] **ENTORNO DEMOSTRATIVO (CLOUD):** Debido a limitaciones de cómputo en la nube, esta instancia opera sobre un conjunto de resultados pre-calculados procedentes de la última ejecución estable local, garantizando así la fluidez de la interfaz. NOTA: Los volúmenes de datos (cantidad de imágenes, URLs, etc.) mostrados en los logs de esta simulación son puramente ilustrativos para la demo; la volumetría masiva real del proyecto se detalla íntegramente en la memoria escrita.")
-st.title("Sistema Híbrido Predictor de Tendencias - TFG")
-st.markdown("Panel de control del pipeline de datos. Ejecute los módulos secuencialmente para procesar la información y generar las predicciones.")
+st.info("[INFO] **MODO DEMOSTRACIÓN:** Esta interfaz está alojada en un servidor gratuito en la nube. Por limitaciones de hardware y tiempo de ejecución, los botones simulan la ejecución de los algoritmos de scraping y Deep Learning, mostrando los últimos resultados pre-calculados del entorno de desarrollo local. NOTA: Los volúmenes de datos (cantidad de imágenes, URLs, etc.) mostrados en los logs de esta simulación son puramente ilustrativos para la demo. La volumetría real del proyecto se detalla íntegramente en la memoria escrita.")
+st.title("Predictor de Tendencias de Moda Basado en Redes Sociales - TFG de Javier")
+st.markdown("Bienvenido al panel de control del TFG. Siga el orden de ejecución para procesar los datos y entrenar la Inteligencia Artificial.")
 st.markdown("---")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -38,7 +38,7 @@ ventana_prediccion = st.sidebar.selectbox(
 fecha_corte = st.sidebar.date_input(
     "Fecha de partición (Train/Test Split):",
     datetime.date(2025, 1, 1),
-    help="Punto temporal de división para evitar filtración de datos durante el entrenamiento."
+    help="Los datos estríctamente anteriores a esta fecha se usarán para entrenar. Los posteriores se aíslan para validar el modelo."
 )
 
 # ----------------- FUNCIÓN DE EJECUCIÓN (MOCK) -----------------
@@ -60,15 +60,15 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Pinterest")
-    if st.button("1a. Inicializar Crawler (Pinterest)"):
+    if st.button("1a. Ejecutar Scraper de Pinterest"):
         simular_script("pinterest_scraper_2.py", 2, "[INFO] 245 URLs de tableros recolectadas.")
             
-    if st.button("2. Descarga de Archivos Visuales"):
+    if st.button("2. Descarga de Imágenes (Pinterest)"):
         simular_script("pinterest_image_downloader.py", 3, "[INFO] 1200 imágenes descargadas y encoladas.")
 
 with col2:
     st.subheader("Instagram")
-    if st.button("1b. Ejecutar Extracción API (Instagram)"):
+    if st.button("1b. Ejecutar Scraper de Instagram"):
         simular_script("apify_hashtags_profiles.py", 2, "[INFO] Metadatos de perfiles e interacciones extraídos correctamente.")
 
 st.markdown("---")
@@ -79,7 +79,7 @@ st.markdown("---")
 st.header("Fase 2: Inferencia Visual (Zero-Shot Learning)")
 st.write("Procesamiento semántico del corpus de imágenes recolectado mediante modelos transformadores.")
 
-if st.button("3. Ejecutar Inferencia Multimodal (CLIP)"):
+if st.button("3. Ejecutar Análisis de Imágenes (CLIP)"):
     simular_script("analisis_imagenes.py", 4, "[INFO] Modelo CLIP instanciado. 1500 imágenes categorizadas.")
 
 st.markdown("---")
@@ -92,15 +92,15 @@ st.header("Fase 3: Procesamiento de Revistas Digitales")
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    if st.button("4. Recolección de Endpoints"):
+    if st.button("4. Recolector de URLs (Revistas Digitales)"):
         simular_script("recolector_urls.py", 2, "[INFO] Mapa de URLs objetivo generado.")
 
 with c2:
-    if st.button("5. Parseo HTML (Extractor Híbrido)"):
+    if st.button("5. Extractor Híbrido"):
         simular_script("extractor_hibrido.py", 3, "[INFO] Entidades (Texto, Autor, Tags) estructuradas.")
 
 with c3:
-    if st.button("6. Normalización Temporal"):
+    if st.button("6. Procesador de Fechas para normalizar formatos"):
         simular_script("procesador_fechas.py", 1, "[INFO] Formatos relativos estandarizados a Datetime.")
 
 st.markdown("---")
@@ -110,14 +110,14 @@ st.markdown("---")
 # =========================================================================
 st.header("Fase 4: Ingeniería de Datos y Modelado")
 
-if st.button("7. Consolidación de Datasets (Master Table)"):
+if st.button("7. Unificación de Datasets"):
     simular_script("unificar_datasets.py", 2, "[INFO] Integración completada. Matriz final: (2600, 45).")
 
-if st.button("8. Generación de Variables Rezagadas (Lags)"):
+if st.button("8. Generación de dataset de entrenamiento"):
     simular_script("crear_dataset_entrenamiento.py", 2, "[INFO] Features temporales y variables Delta generadas.")
 
 st.markdown("### Evaluación de Modelos Predictivos")
-if st.button("9. COMPILAR Y EVALUAR ALGORITMOS (RF, SVR, XGBoost)", type="primary"):
+if st.button("9. ENTRENAR Y EVALUAR ALGORITMOS (RF, SVR, XGBoost)", type="primary"):
     with st.spinner("Optimizando hiperparámetros y calculando métricas de error..."):
         time.sleep(3) 
         st.balloons()
