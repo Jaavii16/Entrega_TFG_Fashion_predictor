@@ -1,19 +1,26 @@
+"""
+Interfaz de usuario (Ejecución Local Real) - Predictor de Tendencias de Moda.
+Proporciona un panel de control interactivo para la ejecución real del pipeline
+de extracción, procesamiento multimodal y entrenamiento de modelos predictivos.
+"""
+
 import streamlit as st
 import subprocess
 import os
 import sys
 import datetime
-import glob # Para buscar las imagenes guardadas
+import glob 
 
-# --- CONFIGURACIÓN DE LA PÁGINA ---
-st.set_page_config(page_title="Prototipo TFG Javier", layout="wide", initial_sidebar_state="expanded")
+# ----------------- CONFIGURACIÓN DEL ENTORNO -----------------
+st.set_page_config(page_title="Panel de Control - Predictor de Tendencias", layout="wide", initial_sidebar_state="expanded")
+
 st.title("Predictor de Tendencias de Moda Basado en Redes Sociales - TFG de Javier")
 st.markdown("Bienvenido al panel de control del TFG. Siga el orden de ejecución para procesar los datos y entrenar la Inteligencia Artificial.")
 st.markdown("---")
 
-# Ruta base del proyecto
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# ----------------- PANEL LATERAL (CONFIGURACIÓN) -----------------
 st.sidebar.header("Configuración Global")
 modo_ejecucion = st.sidebar.radio(
     "Modo de recolección:", 
@@ -24,49 +31,48 @@ modo_ejecucion = st.sidebar.radio(
 ventana_prediccion = st.sidebar.selectbox(
     "Ventana de Predicción (Target):",
     ("TARGET_NEXT_3M_AVG", "TARGET_NEXT_6M_AVG"),
-    help="Selecciona qué variable quieres que el modelo prediga: la popularidad promedio de los próximos 3 meses o de los próximos 6 meses."
+    help="Selecciona qué variable quieres que el modelo prediga: la popularidad promedio de los próximos 3 o 6 meses."
 )
 
-# Selector de fecha de corte en el panel lateral
 fecha_corte = st.sidebar.date_input(
-    "Fecha de corte (Train/Test Split):",
+    "Fecha de partición (Train/Test Split):",
     datetime.date(2025, 1, 1),
-    help="Los datos estrictamente anteriores a esta fecha se usarán para entrenar. Los posteriores se aíslan para validar el modelo."
+    help="Los datos estríctamente anteriores a esta fecha se usarán para entrenar. Los posteriores se aíslan para validar el modelo."
 )
 
-
-def ejecutar_script(nombre_script):
+# ----------------- NÚCLEO DE EJECUCIÓN REAL (BACKEND) -----------------
+def ejecutar_script(nombre_script: str):
+    """Ejecuta los scripts reales inyectando las variables de la UI."""
     ruta_script = os.path.join(BASE_DIR, nombre_script)
     if not os.path.exists(ruta_script):
-        st.error(f"Error: No se encuentra {nombre_script}")
+        st.error(f"[ERROR] No se encuentra el script {nombre_script}")
         return False, ""
     
-    # Preparamos el entorno virtual pasándole nuestras variables de la interfaz
     entorno_actual = os.environ.copy()
     entorno_actual["MODO_EJECUCION"] = modo_ejecucion
     entorno_actual["TARGET_COL"] = ventana_prediccion
     entorno_actual["FECHA_CORTE"] = fecha_corte.strftime("%Y-%m-%d")
     
-    with st.spinner(f"Ejecutando {nombre_script}..."):
+    with st.spinner(f"Ejecutando módulo {nombre_script} en backend..."):
         try:
             proceso = subprocess.run(
                 [sys.executable, ruta_script], 
                 capture_output=True, text=True, check=True, env=entorno_actual
             )
-            st.success(f"Ejecución completada.")
-            with st.expander("Ver consola completa"):
+            st.success(f"[OK] Ejecución completada.")
+            with st.expander("Inspeccionar logs de ejecución"):
                 st.code(proceso.stdout)
-            return True, proceso.stdout # Devolvemos el texto impreso
+            return True, proceso.stdout 
         except subprocess.CalledProcessError as e:
-            st.error("Error en la ejecución.")
-            with st.expander("Ver error"):
+            st.error(f"[ERROR] Fallo en la ejecución de {nombre_script}.")
+            with st.expander("Inspeccionar traza de error"):
                 st.code(e.stderr)
             return False, ""
 
 # =========================================================================
-# 1. PINTEREST E INSTAGRAM (Recolección e Imágenes)
+# FASE 1: EXTRACCIÓN SOCIAL
 # =========================================================================
-st.header("Fase 1: Redes Sociales (Pinterest e Instagram)")
+st.header("Fase 1: Extracción en Redes Sociales")
 
 col1, col2 = st.columns(2)
 
@@ -75,7 +81,7 @@ with col1:
     if st.button("1a. Ejecutar Scraper de Pinterest"):
         ejecutar_script("pinterest_scraper_2.py")
             
-    if st.button("2. Descargar Imágenes (Pinterest)"):
+    if st.button("2. Descarga de Imágenes (Pinterest)"):
         ejecutar_script("pinterest_image_downloader.py")
 
 with col2:
@@ -86,26 +92,25 @@ with col2:
 st.markdown("---")
 
 # =========================================================================
-# 2. ANÁLISIS DE IMÁGENES
+# FASE 2: VISIÓN ARTIFICIAL
 # =========================================================================
-st.header("Fase 2: Análisis de Imágenes por IA")
-st.write("Este proceso analizará todas las imágenes descargadas en la fase anterior (Pinterest e Insta).")
+st.header("Fase 2: Inferencia Visual (Zero-Shot Learning)")
+st.write("Procesamiento semántico del corpus de imágenes recolectado mediante modelos transformadores.")
 
-if st.button("3. Analizar todas las imágenes (CLIP)"):
+if st.button("3. Ejecutar Análisis de Imágenes (CLIP)"):
     ejecutar_script("analisis_imagenes.py")
 
 st.markdown("---")
 
 # =========================================================================
-# 3. REVISTAS DE MODA
+# FASE 3: NLP Y METADATOS
 # =========================================================================
-st.header("Fase 3: Scrapping de Revistas")
-st.write("Extracción de artículos y metadatos de revistas especializadas.")
+st.header("Fase 3: Procesamiento de Revistas Digitales")
 
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    if st.button("4. Recolectar URLs Revistas"):
+    if st.button("4. Recolector de URLs (Revistas Digitales)"):
         ejecutar_script("recolector_urls.py")
 
 with c2:
@@ -119,21 +124,20 @@ with c3:
 st.markdown("---")
 
 # =========================================================================
-# 4. PREPARACIÓN Y MACHINE LEARNING
+# FASE 4: ENTRENAMIENTO Y EVALUACIÓN
 # =========================================================================
-st.header("Fase 4: Consolidación y Entrenamiento Predictivo")
-st.write("Fusión de todas las fuentes de datos (Redes + Revistas + Google Trends) y evaluación de los algoritmos.")
+st.header("Fase 4: Ingeniería de Datos y Modelado")
 
-if st.button("7. Unificar Datasets Completos"):
+if st.button("7. Unificación de Datasets"):
     ejecutar_script("unificar_datasets.py")
 
-if st.button("8. Generar Dataset de Entrenamiento"):
+if st.button("8. Generación de dataset de entrenamiento"):
     ejecutar_script("crear_dataset_entrenamiento.py")
 
-st.markdown("### Competición de Algoritmos (Predictor de Tendencias)")
-if st.button("9. ENTRENAR Y EVALUAR MODELOS (Random Forest, SVR, XGBoost)", type="primary"):
+st.markdown("### Evaluación de Modelos Predictivos")
+if st.button("9. ENTRENAR Y EVALUAR ALGORITMOS (RF, SVR, XGBoost)", type="primary"):
     
-    # Limpiamos gráficas antiguas antes de ejecutar
+    # Limpiamos gráficas antiguas antes de ejecutar el modelo real
     carpeta_graficas = os.path.join(BASE_DIR, "resultados_graficas")
     if os.path.exists(carpeta_graficas):
         for file in glob.glob(os.path.join(carpeta_graficas, "*.png")):
@@ -142,18 +146,15 @@ if st.button("9. ENTRENAR Y EVALUAR MODELOS (Random Forest, SVR, XGBoost)", type
     exito, consola = ejecutar_script("entrenamiento_3modelos.py")
     
     if exito:
-        
-        # 1. Mostrar la tabla de resultados extraída de la consola
-        st.subheader("Tabla de Métricas de Error")
-        # Buscamos la línea donde empieza la tabla y la mostramos
+        st.subheader("Métricas de Precisión Absoluta")
+        # Buscamos la tabla en la consola impresa
         if "--- RESULTADOS DEL ESTUDIO COMPARATIVO ---" in consola:
             tabla_texto = consola.split("--- RESULTADOS DEL ESTUDIO COMPARATIVO ---")[1].split("TOP 5 VARIABLES")[0]
             st.code(tabla_texto.strip(), language="plaintext")
         else:
-            st.warning("No se pudo extraer la tabla, revisa la consola completa arriba.")
+            st.warning("[ALERTA] No se pudo extraer la tabla, revisa la consola completa arriba.")
 
-        # 2. Mostrar las gráficas generadas
-        st.subheader("Predicciones del Comportamiento a Futuro")
+        st.subheader("Proyección Gráfica de Tendencias")
         if os.path.exists(carpeta_graficas):
             imagenes = glob.glob(os.path.join(carpeta_graficas, "*.png"))
             if imagenes:
@@ -161,4 +162,6 @@ if st.button("9. ENTRENAR Y EVALUAR MODELOS (Random Forest, SVR, XGBoost)", type
                 for i, img_path in enumerate(imagenes):
                     cols[i % 2].image(img_path, use_container_width=True)
             else:
-                st.info("No se generaron gráficas para mostrar.")
+                st.warning("[ALERTA] No se encontraron gráficas en el directorio local tras la ejecución.")
+        else:
+            st.error("[ERROR] Directorio de salida 'resultados_graficas' no encontrado.")

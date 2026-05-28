@@ -1,9 +1,3 @@
-"""
-Interfaz de usuario (Demo Cloud) - Predictor de Tendencias de Moda.
-Proporciona un panel de control interactivo simulando el pipeline de extracción,
-procesamiento multimodal y entrenamiento de modelos predictivos.
-"""
-
 import streamlit as st
 import os
 import time
@@ -15,7 +9,7 @@ import glob
 st.set_page_config(page_title="Panel de Control - Predictor de Tendencias", layout="wide", initial_sidebar_state="expanded")
 
 st.info("[INFO] **MODO DEMOSTRACIÓN:** Esta interfaz está alojada en un servidor gratuito en la nube. Por limitaciones de hardware y tiempo de ejecución, los botones simulan la ejecución de los algoritmos de scraping y Deep Learning, mostrando los últimos resultados pre-calculados del entorno de desarrollo local. NOTA: Los volúmenes de datos (cantidad de imágenes, URLs, etc.) mostrados en los logs de esta simulación son puramente ilustrativos para la demo. La volumetría real del proyecto se detalla íntegramente en la memoria escrita.")
-st.title("Predictor de Tendencias de Moda Basado en Redes Sociales")
+st.title("Predictor de Tendencias de Moda Basado en Redes Sociales - TFG de Javier")
 st.markdown("Bienvenido al panel de control del TFG. Siga el orden de ejecución para procesar los datos y entrenar la Inteligencia Artificial.")
 st.markdown("---")
 
@@ -123,7 +117,7 @@ if st.button("9. ENTRENAR Y EVALUAR ALGORITMOS (RF, SVR, XGBoost)", type="primar
         st.balloons()
         st.success("Evaluación de rendimiento completada. Visualizando resultados.")
         
-        st.subheader("Métricas de Precisión Absoluta")
+        st.subheader("Comparativa de métricas de error")
         # Tabla con los valores exactos mostrados en la memoria
         resultados = pd.DataFrame({
             "Métrica": ["MAE", "RMSE", "R²"],
